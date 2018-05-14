@@ -1,0 +1,4 @@
+# Ignore build "stuff"
+packer_cache
+output*
+*.box

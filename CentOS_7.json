@@ -1,0 +1,75 @@
+{
+  "variables": {
+    "version": "1804",
+    "url": "http://centos.mirroring.pulsant.co.uk/7/isos/x86_64/CentOS-7-x86_64-NetInstall-1804.iso",
+    "checksum": "937bf0a7b0932817f84f7230f15ed88911bbbd85c0c958680792b7f8d8f9c1a9",
+    "shutdown_command": "sudo /sbin/halt -p",
+  },
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "sudo {{.Vars}} sh {{.Path}}",
+      "scripts": [
+        "scripts/vagrant.sh",
+        "scripts/vmtools.sh",
+        "scripts/cleanup.sh",
+        "scripts/zerodisk.sh"
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "output": "CentOS-7-x86_64-{{user `version`}}-{{.Provider}}.box"
+    }
+  ],
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "iso_url": "{{user `url`}}",
+      "iso_checksum": "{{user `checksum`}}",
+      "iso_checksum_type": "sha256",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_wait_timeout": "10m",
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
+      ],
+      "disk_size": "100000",
+      "hard_drive_interface": "sata",
+      "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+      "guest_additions_sha256": "b81d283d9ef88a44e7ac8983422bead0823c825cbfe80417423bd12de91b8046",
+      "guest_os_type": "RedHat_64",
+      "headless": "true",
+      "http_directory": "http",
+      "shutdown_command": "{{user `shutdown_command`}}",
+      "vboxmanage": [
+        [ "modifyvm", "{{.Name}}", "--memory", "512" ],
+        [ "modifyvm", "{{.Name}}", "--cpus", "1" ]
+      ]
+    },
+    {
+      "type": "vmware-iso",
+      "iso_url": "{{user `url`}}",
+      "iso_checksum": "{{user `checksum`}}",
+      "iso_checksum_type": "sha256",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_wait_timeout": "20m",
+      "disk_size": "100000",
+      "tools_upload_flavor": "linux",
+      "guest_os_type": "centos-64",
+      "headless": "true",
+      "shutdown_command": "{{user `shutdown_command`}}",
+      "http_directory": "http",
+      "vmx_remove_ethernet_interfaces": "true",
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
+      ],
+      "vmx_data": {
+        "memsize": "512",
+        "numvcpus": "1"
+      }
+    }
+  ]
+}
